@@ -1,7 +1,7 @@
 const REQUIRED_SIGNALS = [
   ['examples', 'Examples'],
   ['validation workflow', 'Validation workflow'],
-  ['side-effect boundaries', 'Side-effect boundaries']
+  ['side effect boundaries', 'Side-effect boundaries']
 ];
 
 export function checkSkill(markdown, options = {}) {
@@ -43,7 +43,7 @@ export function generateCases(markdown, options = {}) {
     ...itemsFrom(sections.examples, 'happy'),
     ...itemsFrom(sections['validation workflow'], 'validation'),
     ...itemsFrom(sections.limitations || sections['non goals'], 'negative'),
-    ...itemsFrom(sections['side-effect boundaries'], 'boundary')
+    ...itemsFrom(sections['side effect boundaries'], 'boundary')
   ];
 
   const deduped = [];
