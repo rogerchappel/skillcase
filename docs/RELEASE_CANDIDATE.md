@@ -6,11 +6,11 @@ Initial public build of `skillcase`, including CLI commands, parser, fixture gen
 
 ## Verification
 
-- `npm test`
-- `npm run check`
-- `npm run smoke`
-- `npm run validate`
+- `npm test` passed.
+- `npm run check` passed.
+- `npm run smoke` passed.
+- `npm run validate` passed.
 
 ## Classification
 
-Ship if verification passes and generated cases are useful for fixture-backed skill maintenance.
+Ship. The first release candidate generates useful fixture skeletons, catches missing coverage signals, and protects existing generated outputs by default.
