@@ -1,0 +1,34 @@
+{
+  "name": "skillcase",
+  "version": "0.1.0",
+  "description": "Generate fixture-backed validation case templates for agent skills.",
+  "type": "module",
+  "bin": {
+    "skillcase": "./bin/skillcase.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/index.js && node --check bin/skillcase.js",
+    "smoke": "node bin/skillcase.js check test/fixtures/complete/SKILL.md",
+    "validate": "bash scripts/validate.sh"
+  },
+  "keywords": [
+    "agents",
+    "skills",
+    "fixtures",
+    "testing",
+    "cli"
+  ],
+  "author": "Roger Chappel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "SKILL.md",
+    "README.md"
+  ]
+}
