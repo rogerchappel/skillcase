@@ -11,6 +11,13 @@ node bin/skillcase.js generate test/fixtures/complete/SKILL.md
 node bin/skillcase.js generate --json --out tmp/cases.json test/fixtures/complete/SKILL.md
 ```
 
+Install the CLI from npm after release:
+
+```sh
+npm install -g skillcase
+skillcase check path/to/SKILL.md
+```
+
 ## Commands
 
 - `skillcase check <SKILL.md>` reports whether the skill has examples, validation workflow, side-effect boundaries, and at least one negative case.
@@ -28,3 +35,12 @@ The CLI reads local Markdown and optionally writes a requested fixture file. It 
 - Generated cases are skeletons; maintainers must fill expected outputs.
 - Section parsing is conservative and works best with clear Markdown headings.
 - The tool does not infer behavior from unstructured prose beyond list items.
+
+## Verify
+
+```sh
+npm test
+npm run check
+npm run smoke
+npm pack --dry-run
+```
