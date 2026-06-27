@@ -10,7 +10,9 @@
     "test": "node --test",
     "check": "node --check src/index.js && node --check bin/skillcase.js",
     "smoke": "node bin/skillcase.js check test/fixtures/complete/SKILL.md",
-    "validate": "bash scripts/validate.sh"
+    "validate": "bash scripts/validate.sh",
+    "package:smoke": "npm pack --dry-run",
+    "release:check": "npm run check && npm test && npm run smoke && npm run validate && npm run package:smoke"
   },
   "keywords": [
     "agents",
