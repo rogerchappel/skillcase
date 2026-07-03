@@ -44,3 +44,13 @@ npm run check
 npm run smoke
 npm pack --dry-run
 ```
+
+## Local Verification
+
+```sh
+npm run check
+npm test
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
