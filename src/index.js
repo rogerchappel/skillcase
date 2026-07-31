@@ -78,11 +78,40 @@ export function formatChecklist(report) {
 export function parseSections(markdown) {
   const sections = { preamble: [] };
   let current = 'preamble';
-  for (const line of markdown.split(/\r?\n/)) {
-    const heading = line.match(/^#{1,3}\s+(.+?)\s*$/);
+  let fence = null;
+  const lines = markdown.split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const fenceMarker = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (fence && line.match(new RegExp(`^ {0,3}${fence.character}{${fence.length},}[ \\t]*$`))) {
+      fence = null;
+      sections[current].push(line);
+      continue;
+    }
+    if (!fence && fenceMarker) {
+      const marker = fenceMarker[1];
+      fence = { character: marker[0], length: marker.length };
+      sections[current].push(line);
+      continue;
+    }
+
+    if (fence) {
+      sections[current].push(line);
+      continue;
+    }
+
+    const heading = line.match(/^ {0,3}#{1,6}(?:[ \t]+|$)(.*?)(?:[ \t]+#+[ \t]*)?$/);
     if (heading) {
       current = normalize(heading[1]);
-      sections[current] = [];
+      sections[current] ||= [];
+      continue;
+    }
+
+    const nextLine = lines[index + 1];
+    if (line.trim() && nextLine && /^ {0,3}(?:=+[ \t]*|-+[ \t]*)$/.test(nextLine)) {
+      current = normalize(line.trim());
+      sections[current] ||= [];
+      index += 1;
       continue;
     }
     sections[current].push(line);
@@ -108,5 +137,24 @@ function normalize(value) {
 }
 
 function firstHeading(markdown) {
-  return markdown.match(/^#\s+(.+?)\s*$/m)?.[1]?.trim();
+  let fence = null;
+  const lines = markdown.split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (fence && line.match(new RegExp(`^ {0,3}${fence.character}{${fence.length},}[ \\t]*$`))) {
+      fence = null;
+      continue;
+    }
+    const fenceMarker = !fence && line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (fenceMarker) {
+      fence = { character: fenceMarker[1][0], length: fenceMarker[1].length };
+      continue;
+    }
+    if (fence) continue;
+
+    const atx = line.match(/^ {0,3}#(?:[ \t]+)(.*?)(?:[ \t]+#+[ \t]*)?$/);
+    if (atx) return atx[1].trim();
+    if (line.trim() && lines[index + 1] && /^ {0,3}(?:=+|-+)[ \t]*$/.test(lines[index + 1])) return line.trim();
+  }
+  return null;
 }

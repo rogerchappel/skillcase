@@ -26,6 +26,17 @@ skillcase check path/to/SKILL.md
 - `--out <path>` writes generated templates to disk.
 - `--force` is required before overwriting an existing output file.
 
+`check` accepts only `--json`. `generate` accepts `--json`, `--out <path>`, and
+`--force`. Options may appear before or after the input path. Unknown options,
+missing option values, extra input paths, and unsupported commands print usage
+information and exit with status 2.
+
+Section parsing recognizes ATX headings at levels 1–6 (including optional
+closing hashes) and setext headings using `===` or `---` underlines. Repeated
+headings are combined in source order so all list items contribute cases.
+Heading-like text inside backtick or tilde fenced code blocks is treated as
+code, not as a section boundary.
+
 ## Safety Notes
 
 The CLI reads local Markdown and optionally writes a requested fixture file. It does not execute referenced tools, mutate installed skill directories, or call external services.
