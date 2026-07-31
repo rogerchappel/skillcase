@@ -11,23 +11,41 @@ function usage() {
 
 const args = process.argv.slice(2);
 const command = args[0];
-const json = args.includes('--json');
-const force = args.includes('--force');
-const outIndex = args.indexOf('--out');
-const outPath = outIndex >= 0 ? args[outIndex + 1] : null;
-const input = args.filter((arg, index) => {
-  if (index === 0) return false;
-  if (['--json', '--force', '--out'].includes(arg)) return false;
-  if (outIndex >= 0 && index === outIndex + 1) return false;
-  return !arg.startsWith('--');
-})[0];
 
 if (!command || args.includes('--help') || args.includes('-h')) {
   console.log(usage());
   process.exit(command ? 0 : 2);
 }
 
-if (!input || !['check', 'generate'].includes(command)) {
+if (!['check', 'generate'].includes(command)) {
+  console.error(`Unknown command: ${command}\n\n${usage()}`);
+  process.exit(2);
+}
+
+const allowedOptions = command === 'check' ? new Set(['--json']) : new Set(['--json', '--force', '--out']);
+const unknownOption = args.slice(1).find((arg) => arg.startsWith('-') && !allowedOptions.has(arg));
+if (unknownOption) {
+  console.error(`Unknown option: ${unknownOption}\n\n${usage()}`);
+  process.exit(2);
+}
+
+const json = args.includes('--json');
+const force = args.includes('--force');
+const outIndex = args.indexOf('--out');
+if (outIndex >= 0 && (!args[outIndex + 1] || args[outIndex + 1].startsWith('-'))) {
+  console.error(`Option --out requires a path.\n\n${usage()}`);
+  process.exit(2);
+}
+const outPath = outIndex >= 0 ? args[outIndex + 1] : null;
+const inputs = args.filter((arg, index) => {
+  if (index === 0) return false;
+  if (['--json', '--force', '--out'].includes(arg)) return false;
+  if (outIndex >= 0 && index === outIndex + 1) return false;
+  return !arg.startsWith('-');
+});
+const input = inputs[0];
+
+if (!input || inputs.length !== 1) {
   console.error(usage());
   process.exit(2);
 }
