@@ -37,6 +37,9 @@ headings are combined in source order so all list items contribute cases.
 Heading-like text inside backtick or tilde fenced code blocks is treated as
 code, not as a section boundary.
 
+Case derivation recognizes unordered list markers (`-`, `*`, and `+`) and
+ordered list markers containing one to nine digits followed by `.` or `)`.
+
 ## Safety Notes
 
 The CLI reads local Markdown and optionally writes a requested fixture file. It does not execute referenced tools, mutate installed skill directories, or call external services.
