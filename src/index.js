@@ -122,7 +122,7 @@ export function parseSections(markdown) {
 function itemsFrom(text = '', type) {
   return text
     .split(/\r?\n/)
-    .map((line) => line.match(/^\s*[-*]\s+(.*)$/)?.[1]?.trim())
+    .map((line) => line.match(/^\s*(?:[-+*]|\d{1,9}[.)])\s+(.*)$/)?.[1]?.trim())
     .filter(Boolean)
     .map((source) => ({ type, source }));
 }
