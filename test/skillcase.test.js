@@ -53,6 +53,37 @@ Limitations
   ]);
 });
 
+test('derives typed cases from plus and ordered list markers', () => {
+  const markdown = `# List marker skill
+
+## Examples
++ plus example
+1. ordered example
+
+## Validation workflow
+2) run the ordered validation step
+
+## Side-effect boundaries
++ keep the plus-marked boundary
+
+## Limitations
+3. reject the ordered limitation
+`;
+  const generated = generateCases(markdown);
+  assert.deepEqual(generated.cases.map(({ type, source }) => [type, source]), [
+    ['happy', 'plus example'],
+    ['happy', 'ordered example'],
+    ['validation', 'run the ordered validation step'],
+    ['negative', 'reject the ordered limitation'],
+    ['boundary', 'keep the plus-marked boundary']
+  ]);
+
+  const report = checkSkill(markdown);
+  assert.equal(report.status, 'pass');
+  assert.equal(report.findings.some((finding) => finding.code === 'missing-negative-case'), false);
+  assert.deepEqual(report.cases, generated.cases);
+});
+
 test('combines repeated matching sections instead of replacing earlier content', () => {
   const sections = parseSections('## Examples\n- first\n\n## Examples\n- second');
   assert.match(sections.examples, /- first/);
