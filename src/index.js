@@ -152,7 +152,7 @@ function firstHeading(markdown) {
     }
     if (fence) continue;
 
-    const atx = line.match(/^ {0,3}#(?:[ \t]+)(.*?)(?:[ \t]+#+[ \t]*)?$/);
+    const atx = line.match(/^ {0,3}#{1,6}(?:[ \t]+|$)(.*?)(?:[ \t]+#+[ \t]*)?$/);
     if (atx) return atx[1].trim();
     if (line.trim() && lines[index + 1] && /^ {0,3}(?:=+|-+)[ \t]*$/.test(lines[index + 1])) return line.trim();
   }

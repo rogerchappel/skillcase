@@ -37,6 +37,9 @@ headings are combined in source order so all list items contribute cases.
 Heading-like text inside backtick or tilde fenced code blocks is treated as
 code, not as a section boundary.
 
+Generated Markdown and JSON use the first non-fenced ATX heading at any level
+from 1–6, or the first non-fenced setext heading, as the skill name.
+
 Case derivation recognizes unordered list markers (`-`, `*`, and `+`) and
 ordered list markers containing one to nine digits followed by `.` or `)`.
 
