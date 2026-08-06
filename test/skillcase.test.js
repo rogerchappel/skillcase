@@ -98,6 +98,49 @@ test('ignores ATX and setext heading syntax inside fenced code', () => {
   assert.equal(generateCases('```md\n# fake\n```\n# Actual\n## Examples\n- real').name, 'Actual');
 });
 
+test('ignores list markers inside backtick and tilde fenced code', () => {
+  const markdown = `# Fenced list skill
+
+## Examples
+- before backticks
+\`\`\`md
+- fenced dash
+* fenced star
+1. fenced ordered dot
+\`\`\`
++ between fences
+~~~~text
++ fenced plus
+2) fenced ordered parenthesis
+~~~~
+3. after tildes
+
+## Validation workflow
+- run the tests
+
+## Side-effect boundaries
+- do not publish
+
+## Limitations
+- unsupported input
+`;
+
+  const sections = parseSections(markdown);
+  assert.match(sections.examples, /- fenced dash/);
+  assert.match(sections.examples, /2\) fenced ordered parenthesis/);
+
+  const generated = generateCases(markdown);
+  assert.deepEqual(generated.cases.filter(({ type }) => type === 'happy').map(({ source }) => source), [
+    'before backticks',
+    'between fences',
+    'after tildes'
+  ]);
+
+  const report = checkSkill(markdown);
+  assert.equal(report.status, 'pass');
+  assert.deepEqual(report.cases, generated.cases);
+});
+
 test('uses the first ATX heading at levels 1 through 6 as the generated name', () => {
   for (let level = 1; level <= 6; level += 1) {
     const hashes = '#'.repeat(level);

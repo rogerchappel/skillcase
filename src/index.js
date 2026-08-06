@@ -120,11 +120,27 @@ export function parseSections(markdown) {
 }
 
 function itemsFrom(text = '', type) {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.match(/^\s*(?:[-+*]|\d{1,9}[.)])\s+(.*)$/)?.[1]?.trim())
-    .filter(Boolean)
-    .map((source) => ({ type, source }));
+  const items = [];
+  let fence = null;
+
+  for (const line of text.split(/\r?\n/)) {
+    if (fence && line.match(new RegExp(`^ {0,3}${fence.character}{${fence.length},}[ \\t]*$`))) {
+      fence = null;
+      continue;
+    }
+
+    const fenceMarker = !fence && line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (fenceMarker) {
+      fence = { character: fenceMarker[1][0], length: fenceMarker[1].length };
+      continue;
+    }
+    if (fence) continue;
+
+    const source = line.match(/^\s*(?:[-+*]|\d{1,9}[.)])\s+(.*)$/)?.[1]?.trim();
+    if (source) items.push({ type, source });
+  }
+
+  return items;
 }
 
 function titleFor(candidate) {
