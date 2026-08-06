@@ -141,6 +141,18 @@ test('ignores list markers inside backtick and tilde fenced code', () => {
   assert.deepEqual(report.cases, generated.cases);
 });
 
+test('uses the first ATX heading at levels 1 through 6 as the generated name', () => {
+  for (let level = 1; level <= 6; level += 1) {
+    const hashes = '#'.repeat(level);
+    assert.equal(generateCases(`${hashes} Nested Skill ${hashes}\n\n## Examples\n- real`).name, 'Nested Skill');
+  }
+});
+
+test('retains setext and fenced-heading behavior when deriving the generated name', () => {
+  assert.equal(generateCases('Nested Skill\n============\n\n## Examples\n- real').name, 'Nested Skill');
+  assert.equal(generateCases('~~~md\n###### Fenced Skill\n~~~\n#### Nested Skill ####').name, 'Nested Skill');
+});
+
 test('CLI rejects unknown options with usage and exit code 2', () => {
   const result = spawnSync(process.execPath, ['bin/skillcase.js', 'check', '--bogus', 'test/fixtures/complete/SKILL.md'], {
     cwd: new URL('..', import.meta.url),
@@ -173,4 +185,23 @@ test('CLI writes generated output with force', () => {
   const body = readFileSync(out, 'utf8');
   rmSync(dir, { recursive: true, force: true });
   assert.match(body, /Skill Cases/);
+});
+
+test('CLI uses a nested ATX heading in Markdown and JSON output names', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'skillcase-'));
+  const input = join(dir, 'SKILL.md');
+  writeFileSync(input, '### Nested Skill ###\n\n## Examples\n- example');
+
+  const markdown = execFileSync(process.execPath, ['bin/skillcase.js', 'generate', input], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+  const json = execFileSync(process.execPath, ['bin/skillcase.js', 'generate', '--json', input], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+  rmSync(dir, { recursive: true, force: true });
+
+  assert.match(markdown, /^# Skill Cases: Nested Skill$/m);
+  assert.equal(JSON.parse(json).name, 'Nested Skill');
 });
