@@ -163,6 +163,34 @@ test('CLI rejects unknown options with usage and exit code 2', () => {
   assert.match(result.stderr, /Usage:/);
 });
 
+test('CLI reports a concise path-specific error for a missing input', () => {
+  const missing = join(tmpdir(), `skillcase-missing-${process.pid}.md`);
+  const result = spawnSync(process.execPath, ['bin/skillcase.js', 'check', missing], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stderr, `skillcase: unable to read input ${missing} (ENOENT)\n`);
+  assert.doesNotMatch(result.stderr, /\n\s+at /);
+});
+
+test('CLI reports a concise path-specific error when output cannot be written', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'skillcase-'));
+  const parentFile = join(dir, 'not-a-directory');
+  const out = join(parentFile, 'cases.md');
+  writeFileSync(parentFile, 'existing');
+  const result = spawnSync(process.execPath, ['bin/skillcase.js', 'generate', '--out', out, 'test/fixtures/complete/SKILL.md'], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+  rmSync(dir, { recursive: true, force: true });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, new RegExp(`^skillcase: unable to write output ${escapeRegExp(out)} \\([A-Z]+\\)\\n$`));
+  assert.doesNotMatch(result.stderr, /\n\s+at /);
+});
+
 test('CLI refuses to overwrite generated output without force', () => {
   const dir = mkdtempSync(join(tmpdir(), 'skillcase-'));
   const out = join(dir, 'cases.md');
@@ -205,3 +233,7 @@ test('CLI uses a nested ATX heading in Markdown and JSON output names', () => {
   assert.match(markdown, /^# Skill Cases: Nested Skill$/m);
   assert.equal(JSON.parse(json).name, 'Nested Skill');
 });
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
