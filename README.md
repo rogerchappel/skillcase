@@ -31,6 +31,11 @@ skillcase check path/to/SKILL.md
 missing option values, extra input paths, and unsupported commands print usage
 information and exit with status 2.
 
+Input read and generated-output filesystem failures print a concise,
+path-specific `skillcase:` diagnostic without an internal stack trace and exit
+with status 1. Existing output is still left untouched unless `--force` is
+provided.
+
 Section parsing recognizes ATX headings at levels 1–6 (including optional
 closing hashes) and setext headings using `===` or `---` underlines. Repeated
 headings are combined in source order so all list items contribute cases.
