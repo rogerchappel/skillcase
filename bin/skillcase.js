@@ -51,7 +51,12 @@ if (!input || inputs.length !== 1) {
 }
 
 const filePath = resolve(input);
-const markdown = readFileSync(filePath, 'utf8');
+let markdown;
+try {
+  markdown = readFileSync(filePath, 'utf8');
+} catch (error) {
+  exitWithFileError('read input', filePath, error);
+}
 
 if (command === 'check') {
   const report = checkSkill(markdown, { filePath });
@@ -66,11 +71,21 @@ if (command === 'check') {
       console.error(`Refusing to overwrite ${target}; pass --force to replace it.`);
       process.exit(1);
     }
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, payload);
+    try {
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, payload);
+    } catch (error) {
+      exitWithFileError('write output', target, error);
+    }
   } else {
     console.log(payload);
   }
+}
+
+function exitWithFileError(action, path, error) {
+  const detail = error && typeof error === 'object' && 'code' in error ? ` (${error.code})` : '';
+  console.error(`skillcase: unable to ${action} ${path}${detail}`);
+  process.exit(1);
 }
 
 function renderMarkdownCases(cases) {
