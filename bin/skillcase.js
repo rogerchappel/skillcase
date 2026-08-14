@@ -67,6 +67,10 @@ if (command === 'check') {
   const payload = json ? JSON.stringify(cases, null, 2) : renderMarkdownCases(cases);
   if (outPath) {
     const target = resolve(outPath);
+    if (target === filePath) {
+      console.error(`skillcase: output path matches input ${filePath}`);
+      process.exit(1);
+    }
     if (existsSync(target) && !force) {
       console.error(`Refusing to overwrite ${target}; pass --force to replace it.`);
       process.exit(1);
