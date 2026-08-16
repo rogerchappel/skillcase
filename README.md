@@ -39,6 +39,10 @@ provided.
 Section parsing recognizes ATX headings at levels 1–6 (including optional
 closing hashes) and setext headings using `===` or `---` underlines. Repeated
 headings are combined in source order so all list items contribute cases.
+Content beneath a deeper subheading remains part of its parent section until a
+heading at the parent's level or higher begins. This lets grouped lists under
+sections such as Examples, Validation workflow, Side-effect boundaries,
+Limitations, and Non goals retain their intended case type.
 Heading-like text inside backtick or tilde fenced code blocks is treated as
 code, not as a section boundary.
 
