@@ -98,9 +98,9 @@ test('keeps nested ATX and setext content in its semantic parent section', () =>
 ### Routine requests
 - handle the routine request
 
-## Examples
-Detailed examples
------------------
+Examples
+--------
+### Detailed examples
 - nested happy path
 
 ## Validation workflow
