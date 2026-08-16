@@ -77,44 +77,56 @@ export function formatChecklist(report) {
 
 export function parseSections(markdown) {
   const sections = { preamble: [] };
-  let current = 'preamble';
+  let headings = [];
   let fence = null;
   const lines = markdown.split(/\r?\n/);
+
+  const append = (line) => {
+    const keys = headings.length ? headings.map(({ key }) => key) : ['preamble'];
+    for (const key of new Set(keys)) sections[key].push(line);
+  };
+
+  const enterHeading = (level, value) => {
+    const key = normalize(value);
+    while (headings.at(-1)?.level >= level) headings.pop();
+    sections[key] ||= [];
+    headings.push({ level, key });
+  };
+
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     const fenceMarker = line.match(/^ {0,3}(`{3,}|~{3,})/);
     if (fence && line.match(new RegExp(`^ {0,3}${fence.character}{${fence.length},}[ \\t]*$`))) {
       fence = null;
-      sections[current].push(line);
+      append(line);
       continue;
     }
     if (!fence && fenceMarker) {
       const marker = fenceMarker[1];
       fence = { character: marker[0], length: marker.length };
-      sections[current].push(line);
+      append(line);
       continue;
     }
 
     if (fence) {
-      sections[current].push(line);
+      append(line);
       continue;
     }
 
-    const heading = line.match(/^ {0,3}#{1,6}(?:[ \t]+|$)(.*?)(?:[ \t]+#+[ \t]*)?$/);
+    const heading = line.match(/^ {0,3}(#{1,6})(?:[ \t]+|$)(.*?)(?:[ \t]+#+[ \t]*)?$/);
     if (heading) {
-      current = normalize(heading[1]);
-      sections[current] ||= [];
+      enterHeading(heading[1].length, heading[2]);
       continue;
     }
 
     const nextLine = lines[index + 1];
-    if (line.trim() && nextLine && /^ {0,3}(?:=+[ \t]*|-+[ \t]*)$/.test(nextLine)) {
-      current = normalize(line.trim());
-      sections[current] ||= [];
+    const setext = line.trim() && nextLine?.match(/^ {0,3}(=+|-+)[ \t]*$/);
+    if (setext) {
+      enterHeading(setext[1][0] === '=' ? 1 : 2, line.trim());
       index += 1;
       continue;
     }
-    sections[current].push(line);
+    append(line);
   }
   return Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, lines.join('\n').trim()]));
 }
