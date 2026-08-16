@@ -91,6 +91,98 @@ test('combines repeated matching sections instead of replacing earlier content',
   assert.deepEqual(generateCases('## Examples\n- first\n\n## Examples\n- second').cases.map((item) => item.source), ['first', 'second']);
 });
 
+test('keeps nested ATX and setext content in its semantic parent section', () => {
+  const markdown = `# Nested section skill
+
+## When to use
+### Routine requests
+- handle the routine request
+
+## Examples
+Detailed examples
+-----------------
+- nested happy path
+
+## Validation workflow
+### Automated checks
+- run the nested check
+
+## Side-effect boundaries
+### Publishing
+- require confirmation before publishing
+
+## Limitations
+### Unsupported inputs
+- reject the nested unsupported input
+`;
+
+  const report = checkSkill(markdown);
+  assert.equal(report.status, 'pass');
+  assert.equal(report.findings.some(({ code }) => code === 'missing-negative-case'), false);
+  assert.deepEqual(report.cases.map(({ type, source }) => [type, source]), [
+    ['happy', 'handle the routine request'],
+    ['happy', 'nested happy path'],
+    ['validation', 'run the nested check'],
+    ['negative', 'reject the nested unsupported input'],
+    ['boundary', 'require confirmation before publishing']
+  ]);
+});
+
+test('ends nested semantic membership at a same-or-higher-level heading', () => {
+  const markdown = `# Boundary skill
+
+## Examples
+### Included details
+- included example
+## Notes
+### Not examples
+- excluded note
+
+## Validation workflow
+- validate
+## Side-effect boundaries
+- keep local
+## Non goals
+### Exclusions
+- nested negative
+# Appendix
+- excluded appendix item
+`;
+
+  assert.deepEqual(generateCases(markdown).cases.map(({ type, source }) => [type, source]), [
+    ['happy', 'included example'],
+    ['validation', 'validate'],
+    ['negative', 'nested negative'],
+    ['boundary', 'keep local']
+  ]);
+});
+
+test('combines repeated semantic parents with nested content and ignores fenced pseudo-headings', () => {
+  const markdown = `## Examples
+### First group
+- first nested example
+
+\`\`\`md
+## Limitations
+- fenced negative
+\`\`\`
+
+## Examples
+### Second group
+- second nested example
+
+## Limitations
+### Actual limitations
+- actual nested negative
+`;
+
+  assert.deepEqual(generateCases(markdown).cases.map(({ type, source }) => [type, source]), [
+    ['happy', 'first nested example'],
+    ['happy', 'second nested example'],
+    ['negative', 'actual nested negative']
+  ]);
+});
+
 test('ignores ATX and setext heading syntax inside fenced code', () => {
   const sections = parseSections('## Examples\n- real\n```md\n## Limitations\ninside\n------\n```\n## Limitations\n- actual');
   assert.match(sections.examples, /## Limitations/);
