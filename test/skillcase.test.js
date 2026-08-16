@@ -307,6 +307,41 @@ test('CLI writes generated output with force', () => {
   assert.match(body, /Skill Cases/);
 });
 
+test('CLI refuses to overwrite its input even with force', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'skillcase-'));
+  const input = join(dir, 'SKILL.md');
+  const original = '# Collision Skill\n\n## Examples\n- preserved';
+  writeFileSync(input, original);
+
+  const result = spawnSync(process.execPath, ['bin/skillcase.js', 'generate', '--force', '--out', input, input], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stderr, `skillcase: output path matches input ${input}\n`);
+  assert.equal(readFileSync(input, 'utf8'), original);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('CLI refuses normalized spellings of its input as output', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'skillcase-'));
+  const input = join(dir, 'SKILL.md');
+  const normalizedAlias = join(dir, 'nested', '..', 'SKILL.md');
+  const original = '# Normalized Collision\n\n## Examples\n- preserved';
+  writeFileSync(input, original);
+
+  const result = spawnSync(process.execPath, ['bin/skillcase.js', 'generate', '--force', '--out', normalizedAlias, input], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stderr, `skillcase: output path matches input ${input}\n`);
+  assert.equal(readFileSync(input, 'utf8'), original);
+  rmSync(dir, { recursive: true, force: true });
+});
+
 test('CLI uses a nested ATX heading in Markdown and JSON output names', () => {
   const dir = mkdtempSync(join(tmpdir(), 'skillcase-'));
   const input = join(dir, 'SKILL.md');

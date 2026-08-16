@@ -26,6 +26,11 @@ skillcase check path/to/SKILL.md
 - `--out <path>` writes generated templates to disk.
 - `--force` is required before overwriting an existing output file.
 
+The output must be a different resolved path from the input. `--force` can
+replace a separate output file, but it never permits overwriting the source
+`SKILL.md`, including when input and output use different relative or absolute
+spellings of the same path.
+
 `check` accepts only `--json`. `generate` accepts `--json`, `--out <path>`, and
 `--force`. Options may appear before or after the input path. Unknown options,
 missing option values, extra input paths, and unsupported commands print usage
@@ -34,7 +39,8 @@ information and exit with status 2.
 Input read and generated-output filesystem failures print a concise,
 path-specific `skillcase:` diagnostic without an internal stack trace and exit
 with status 1. Existing output is still left untouched unless `--force` is
-provided.
+provided. An output path that resolves to the input is always rejected before
+writing, and the input remains unchanged.
 
 Section parsing recognizes ATX headings at levels 1–6 (including optional
 closing hashes) and setext headings using `===` or `---` underlines. Repeated
