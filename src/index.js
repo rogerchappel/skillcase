@@ -36,13 +36,15 @@ export function checkSkill(markdown, options = {}) {
 }
 
 export function generateCases(markdown, options = {}) {
-  const sections = parseSections(markdown);
+  const { sections, orderedSections } = parseDocument(markdown);
   const name = firstHeading(markdown) || 'skill';
   const candidates = [
     ...itemsFrom(sections['when to use'] || sections.preamble, 'happy'),
     ...itemsFrom(sections.examples, 'happy'),
     ...itemsFrom(sections['validation workflow'], 'validation'),
-    ...itemsFrom(sections.limitations || sections['non goals'], 'negative'),
+    ...orderedSections
+      .filter(({ key }) => key === 'limitations' || key === 'non goals')
+      .flatMap(({ text }) => itemsFrom(text, 'negative')),
     ...itemsFrom(sections['side effect boundaries'], 'boundary')
   ];
 
@@ -76,7 +78,12 @@ export function formatChecklist(report) {
 }
 
 export function parseSections(markdown) {
+  return parseDocument(markdown).sections;
+}
+
+function parseDocument(markdown) {
   const sections = { preamble: [] };
+  const orderedSections = [];
   let headings = [];
   let fence = null;
   const lines = markdown.split(/\r?\n/);
@@ -84,13 +91,16 @@ export function parseSections(markdown) {
   const append = (line) => {
     const keys = headings.length ? headings.map(({ key }) => key) : ['preamble'];
     for (const key of new Set(keys)) sections[key].push(line);
+    for (const heading of headings) heading.lines.push(line);
   };
 
   const enterHeading = (level, value) => {
     const key = normalize(value);
     while (headings.at(-1)?.level >= level) headings.pop();
     sections[key] ||= [];
-    headings.push({ level, key });
+    const heading = { level, key, lines: [] };
+    headings.push(heading);
+    orderedSections.push(heading);
   };
 
   for (let index = 0; index < lines.length; index += 1) {
@@ -128,7 +138,10 @@ export function parseSections(markdown) {
     }
     append(line);
   }
-  return Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, lines.join('\n').trim()]));
+  return {
+    sections: Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, lines.join('\n').trim()])),
+    orderedSections: orderedSections.map(({ key, lines }) => ({ key, text: lines.join('\n').trim() }))
+  };
 }
 
 function itemsFrom(text = '', type) {
