@@ -91,6 +91,45 @@ test('combines repeated matching sections instead of replacing earlier content',
   assert.deepEqual(generateCases('## Examples\n- first\n\n## Examples\n- second').cases.map((item) => item.source), ['first', 'second']);
 });
 
+test('combines Limitations and Non-goals as negative cases in source order', () => {
+  const markdown = `# Combined negative sections
+
+## Non-goals
+### Deferred work
+- do not provision accounts
+
+## Limitations
+- reject unsupported input
+
+## Non goals
+- do not publish releases
+`;
+
+  assert.deepEqual(generateCases(markdown).cases.map(({ type, source }) => [type, source]), [
+    ['negative', 'do not provision accounts'],
+    ['negative', 'reject unsupported input'],
+    ['negative', 'do not publish releases']
+  ]);
+});
+
+test('deduplicates matching negatives across Limitations and Non-goals without discarding either section', () => {
+  const markdown = `## Limitations
+- shared exclusion
+- limitation only
+
+Non-goals
+---------
+- shared exclusion
+- non-goal only
+`;
+
+  assert.deepEqual(generateCases(markdown).cases.map(({ source }) => source), [
+    'shared exclusion',
+    'limitation only',
+    'non-goal only'
+  ]);
+});
+
 test('keeps nested ATX and setext content in its semantic parent section', () => {
   const markdown = `# Nested section skill
 
@@ -359,6 +398,31 @@ test('CLI uses a nested ATX heading in Markdown and JSON output names', () => {
 
   assert.match(markdown, /^# Skill Cases: Nested Skill$/m);
   assert.equal(JSON.parse(json).name, 'Nested Skill');
+});
+
+test('CLI JSON output includes Limitations and Non-goals negatives', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'skillcase-'));
+  const input = join(dir, 'SKILL.md');
+  writeFileSync(input, `# CLI negatives
+
+## Limitations
+- limitation case
+
+## Non-goals
+### Excluded workflows
+- non-goal case
+`);
+
+  const output = execFileSync(process.execPath, ['bin/skillcase.js', 'generate', '--json', input], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+  rmSync(dir, { recursive: true, force: true });
+
+  assert.deepEqual(JSON.parse(output).cases.map(({ type, source }) => [type, source]), [
+    ['negative', 'limitation case'],
+    ['negative', 'non-goal case']
+  ]);
 });
 
 function escapeRegExp(value) {
