@@ -272,6 +272,64 @@ test('ignores list markers inside backtick and tilde fenced code', () => {
   assert.deepEqual(report.cases, generated.cases);
 });
 
+test('ignores list-looking lines in indented Markdown code', () => {
+  const markdown = `# Indented code skill
+
+## Examples
+    - four-space code
+\t1. tab-indented code
+- real dash item
+9) real ordered item
+
+## Validation workflow
+- run the tests
+
+## Side-effect boundaries
+- do not publish
+
+## Limitations
+- unsupported input
+`;
+
+  assert.deepEqual(generateCases(markdown).cases.filter(({ type }) => type === 'happy').map(({ source }) => source), [
+    'real dash item',
+    'real ordered item'
+  ]);
+});
+
+test('CLI excludes indented pseudo-cases while retaining real list items', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'skillcase-indented-'));
+  const input = join(dir, 'SKILL.md');
+  writeFileSync(input, `# CLI indented code skill
+
+## Examples
+    * four-space code
+\t2) tab-indented code
++ real plus item
+123456789. real ordered item
+
+## Validation workflow
+- run the tests
+
+## Side-effect boundaries
+- do not publish
+
+## Limitations
+- unsupported input
+`);
+
+  const output = execFileSync(process.execPath, ['bin/skillcase.js', 'generate', '--json', input], {
+    cwd: new URL('..', import.meta.url),
+    encoding: 'utf8'
+  });
+  rmSync(dir, { recursive: true, force: true });
+
+  assert.deepEqual(JSON.parse(output).cases.filter(({ type }) => type === 'happy').map(({ source }) => source), [
+    'real plus item',
+    'real ordered item'
+  ]);
+});
+
 test('uses the first ATX heading at levels 1 through 6 as the generated name', () => {
   for (let level = 1; level <= 6; level += 1) {
     const hashes = '#'.repeat(level);
