@@ -57,8 +57,9 @@ from 1–6, or the first non-fenced setext heading, as the skill name.
 
 Case derivation recognizes unordered list markers (`-`, `*`, and `+`) and
 ordered list markers containing one to nine digits followed by `.` or `)`.
-List-looking lines inside backtick or tilde fenced code blocks are treated as
-code and do not produce cases.
+Markers may be indented by up to three spaces. List-looking lines inside
+backtick or tilde fenced code blocks, four-space-indented code, or tab-indented
+code are treated as code and do not produce cases.
 
 ## Safety Notes
 

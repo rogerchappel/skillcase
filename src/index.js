@@ -139,9 +139,13 @@ function parseDocument(markdown) {
     append(line);
   }
   return {
-    sections: Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, lines.join('\n').trim()])),
-    orderedSections: orderedSections.map(({ key, lines }) => ({ key, text: lines.join('\n').trim() }))
+    sections: Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, trimSection(lines)])),
+    orderedSections: orderedSections.map(({ key, lines }) => ({ key, text: trimSection(lines) }))
   };
+}
+
+function trimSection(lines) {
+  return lines.join('\n').replace(/^(?:[ \t]*\n)+/, '').replace(/(?:\n[ \t]*)+$/, '');
 }
 
 function itemsFrom(text = '', type) {
@@ -161,7 +165,7 @@ function itemsFrom(text = '', type) {
     }
     if (fence) continue;
 
-    const source = line.match(/^\s*(?:[-+*]|\d{1,9}[.)])\s+(.*)$/)?.[1]?.trim();
+    const source = line.match(/^ {0,3}(?:[-+*]|\d{1,9}[.)])\s+(.*)$/)?.[1]?.trim();
     if (source) items.push({ type, source });
   }
 
