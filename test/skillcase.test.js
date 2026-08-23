@@ -167,6 +167,54 @@ Examples
   ]);
 });
 
+test('uses the most specific recognized semantic section for nested list items', () => {
+  const markdown = `# Nested semantic sections
+
+## Examples
+- top-level happy path
+
+### Detailed example
+- grouped happy path
+
+### Limitations
+- nested unsupported input
+
+#### Rationale
+- grouped negative detail
+
+## Validation workflow
+- top-level validation
+
+### Side-effect boundaries
+- nested publishing boundary
+`;
+
+  assert.deepEqual(generateCases(markdown).cases.map(({ type, source }) => [type, source]), [
+    ['happy', 'top-level happy path'],
+    ['happy', 'grouped happy path'],
+    ['validation', 'top-level validation'],
+    ['negative', 'nested unsupported input'],
+    ['negative', 'grouped negative detail'],
+    ['boundary', 'nested publishing boundary']
+  ]);
+});
+
+test('does not inherit a conflicting type when Non goals contains Examples', () => {
+  const markdown = `# Nested examples
+
+## Non goals
+- unsupported operation
+
+### Examples
+- supported alternative
+`;
+
+  assert.deepEqual(generateCases(markdown).cases.map(({ type, source }) => [type, source]), [
+    ['happy', 'supported alternative'],
+    ['negative', 'unsupported operation']
+  ]);
+});
+
 test('ends nested semantic membership at a same-or-higher-level heading', () => {
   const markdown = `# Boundary skill
 
