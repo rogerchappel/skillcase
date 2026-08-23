@@ -49,6 +49,10 @@ Content beneath a deeper subheading remains part of its parent section until a
 heading at the parent's level or higher begins. This lets grouped lists under
 sections such as Examples, Validation workflow, Side-effect boundaries,
 Limitations, and Non goals retain their intended case type.
+If a deeper heading is itself one of those recognized semantic sections, its
+list items use that more specific case type instead of also inheriting the
+parent's type. Non-semantic grouping headings continue to inherit their nearest
+recognized semantic parent.
 Heading-like text inside backtick or tilde fenced code blocks is treated as
 code, not as a section boundary.
 
