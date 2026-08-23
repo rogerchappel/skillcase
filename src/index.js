@@ -36,16 +36,21 @@ export function checkSkill(markdown, options = {}) {
 }
 
 export function generateCases(markdown, options = {}) {
-  const { sections, orderedSections } = parseDocument(markdown);
+  const { sections, caseSections } = parseDocument(markdown);
   const name = firstHeading(markdown) || 'skill';
+  const caseText = (keys) => caseSections
+    .filter(({ key }) => keys.includes(key))
+    .map(({ text }) => text)
+    .join('\n');
+  const happyText = caseSections.some(({ key }) => key === 'when to use')
+    ? caseText(['when to use'])
+    : sections.preamble;
   const candidates = [
-    ...itemsFrom(sections['when to use'] || sections.preamble, 'happy'),
-    ...itemsFrom(sections.examples, 'happy'),
-    ...itemsFrom(sections['validation workflow'], 'validation'),
-    ...orderedSections
-      .filter(({ key }) => key === 'limitations' || key === 'non goals')
-      .flatMap(({ text }) => itemsFrom(text, 'negative')),
-    ...itemsFrom(sections['side effect boundaries'], 'boundary')
+    ...itemsFrom(happyText, 'happy'),
+    ...itemsFrom(caseText(['examples']), 'happy'),
+    ...itemsFrom(caseText(['validation workflow']), 'validation'),
+    ...itemsFrom(caseText(['limitations', 'non goals']), 'negative'),
+    ...itemsFrom(caseText(['side effect boundaries']), 'boundary')
   ];
 
   const deduped = [];
@@ -84,6 +89,14 @@ export function parseSections(markdown) {
 function parseDocument(markdown) {
   const sections = { preamble: [] };
   const orderedSections = [];
+  const semanticKeys = new Set([
+    'when to use',
+    'examples',
+    'validation workflow',
+    'limitations',
+    'non goals',
+    'side effect boundaries'
+  ]);
   let headings = [];
   let fence = null;
   const lines = markdown.split(/\r?\n/);
@@ -92,13 +105,15 @@ function parseDocument(markdown) {
     const keys = headings.length ? headings.map(({ key }) => key) : ['preamble'];
     for (const key of new Set(keys)) sections[key].push(line);
     for (const heading of headings) heading.lines.push(line);
+    const semanticHeading = headings.findLast(({ key }) => semanticKeys.has(key));
+    if (semanticHeading) semanticHeading.caseLines.push(line);
   };
 
   const enterHeading = (level, value) => {
     const key = normalize(value);
     while (headings.at(-1)?.level >= level) headings.pop();
     sections[key] ||= [];
-    const heading = { level, key, lines: [] };
+    const heading = { level, key, lines: [], caseLines: [] };
     headings.push(heading);
     orderedSections.push(heading);
   };
@@ -140,7 +155,10 @@ function parseDocument(markdown) {
   }
   return {
     sections: Object.fromEntries(Object.entries(sections).map(([key, lines]) => [key, trimSection(lines)])),
-    orderedSections: orderedSections.map(({ key, lines }) => ({ key, text: trimSection(lines) }))
+    orderedSections: orderedSections.map(({ key, lines }) => ({ key, text: trimSection(lines) })),
+    caseSections: orderedSections
+      .filter(({ key }) => semanticKeys.has(key))
+      .map(({ key, caseLines }) => ({ key, text: trimSection(caseLines) }))
   };
 }
 
