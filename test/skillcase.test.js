@@ -277,6 +277,38 @@ test('ignores ATX and setext heading syntax inside fenced code', () => {
   assert.equal(generateCases('```md\n# fake\n```\n# Actual\n## Examples\n- real').name, 'Actual');
 });
 
+test('treats indented setext candidates as code instead of semantic sections', () => {
+  for (const indent of ['    ', '\t']) {
+    const markdown = `# Actual skill
+
+${indent}Examples
+--------
+- pseudo example
+
+## Examples
+- real example
+
+## Validation workflow
+- run the tests
+
+## Side-effect boundaries
+- do not publish
+
+## Limitations
+- unsupported input
+`;
+
+    const report = checkSkill(markdown);
+    assert.equal(report.status, 'pass');
+    assert.deepEqual(report.cases.map(({ type, source }) => [type, source]), [
+      ['happy', 'real example'],
+      ['validation', 'run the tests'],
+      ['negative', 'unsupported input'],
+      ['boundary', 'do not publish']
+    ]);
+  }
+});
+
 test('ignores list markers inside backtick and tilde fenced code', () => {
   const markdown = `# Fenced list skill
 
@@ -388,6 +420,12 @@ test('uses the first ATX heading at levels 1 through 6 as the generated name', (
 test('retains setext and fenced-heading behavior when deriving the generated name', () => {
   assert.equal(generateCases('Nested Skill\n============\n\n## Examples\n- real').name, 'Nested Skill');
   assert.equal(generateCases('~~~md\n###### Fenced Skill\n~~~\n#### Nested Skill ####').name, 'Nested Skill');
+});
+
+test('does not derive generated names from indented setext candidates', () => {
+  for (const indent of ['    ', '\t']) {
+    assert.equal(generateCases(`${indent}Pseudo skill\n============\n\n# Actual skill`).name, 'Actual skill');
+  }
 });
 
 test('CLI rejects unknown options with usage and exit code 2', () => {
