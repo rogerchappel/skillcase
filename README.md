@@ -54,10 +54,13 @@ list items use that more specific case type instead of also inheriting the
 parent's type. Non-semantic grouping headings continue to inherit their nearest
 recognized semantic parent.
 Heading-like text inside backtick or tilde fenced code blocks is treated as
-code, not as a section boundary.
+code, not as a section boundary. Setext title text indented by four spaces or
+a tab is likewise treated as Markdown code, even when followed by an otherwise
+valid `===` or `---` underline.
 
 Generated Markdown and JSON use the first non-fenced ATX heading at any level
-from 1–6, or the first non-fenced setext heading, as the skill name.
+from 1–6, or the first non-fenced, non-indented setext heading, as the skill
+name.
 
 Case derivation recognizes unordered list markers (`-`, `*`, and `+`) and
 ordered list markers containing one to nine digits followed by `.` or `)`.
