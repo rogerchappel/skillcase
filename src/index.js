@@ -145,7 +145,7 @@ function parseDocument(markdown) {
     }
 
     const nextLine = lines[index + 1];
-    const setext = line.trim() && nextLine?.match(/^ {0,3}(=+|-+)[ \t]*$/);
+    const setext = isSetextText(line) && nextLine?.match(/^ {0,3}(=+|-+)[ \t]*$/);
     if (setext) {
       enterHeading(setext[1][0] === '=' ? 1 : 2, line.trim());
       index += 1;
@@ -199,6 +199,10 @@ function normalize(value) {
   return value.toLowerCase().replace(/[`*_]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+function isSetextText(line) {
+  return Boolean(line.trim()) && !/^(?: {4}|\t)/.test(line);
+}
+
 function firstHeading(markdown) {
   let fence = null;
   const lines = markdown.split(/\r?\n/);
@@ -217,7 +221,7 @@ function firstHeading(markdown) {
 
     const atx = line.match(/^ {0,3}#{1,6}(?:[ \t]+|$)(.*?)(?:[ \t]+#+[ \t]*)?$/);
     if (atx) return atx[1].trim();
-    if (line.trim() && lines[index + 1] && /^ {0,3}(?:=+|-+)[ \t]*$/.test(lines[index + 1])) return line.trim();
+    if (isSetextText(line) && lines[index + 1] && /^ {0,3}(?:=+|-+)[ \t]*$/.test(lines[index + 1])) return line.trim();
   }
   return null;
 }
