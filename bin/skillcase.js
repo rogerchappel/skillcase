@@ -23,6 +23,13 @@ if (!['check', 'generate'].includes(command)) {
 }
 
 const allowedOptions = command === 'check' ? new Set(['--json']) : new Set(['--json', '--force', '--out']);
+for (const option of allowedOptions) {
+  const count = args.slice(1).filter((arg) => arg === option).length;
+  if (count > 1) {
+    console.error(`Option ${option} may only be provided once.\n\n${usage()}`);
+    process.exit(2);
+  }
+}
 const unknownOption = args.slice(1).find((arg) => arg.startsWith('-') && !allowedOptions.has(arg));
 if (unknownOption) {
   console.error(`Unknown option: ${unknownOption}\n\n${usage()}`);

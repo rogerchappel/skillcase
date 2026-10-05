@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -436,6 +436,31 @@ test('CLI rejects unknown options with usage and exit code 2', () => {
   assert.equal(result.status, 2);
   assert.match(result.stderr, /Unknown option: --bogus/);
   assert.match(result.stderr, /Usage:/);
+});
+
+test('CLI rejects repeated options with usage and exit code 2 before writing output', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'skillcase-'));
+  const out = join(dir, 'cases.json');
+  const input = 'test/fixtures/complete/SKILL.md';
+  const cases = [
+    ['generate', '--out', out, '--out', out, input],
+    ['generate', '--json', '--json', input],
+    ['generate', '--force', '--force', '--out', out, input],
+    ['check', '--json', '--json', input]
+  ];
+
+  for (const args of cases) {
+    const result = spawnSync(process.execPath, ['bin/skillcase.js', ...args], {
+      cwd: new URL('..', import.meta.url),
+      encoding: 'utf8'
+    });
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /may only be provided once/);
+    assert.match(result.stderr, /Usage:/);
+  }
+
+  assert.equal(existsSync(out), false);
+  rmSync(dir, { recursive: true, force: true });
 });
 
 test('CLI reports a concise path-specific error for a missing input', () => {
